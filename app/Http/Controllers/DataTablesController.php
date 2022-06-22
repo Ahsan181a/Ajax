@@ -1,10 +1,8 @@
 <?php
-
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Book;
 use Datatables;
-
 class DataTablesController extends Controller
 {
     /**
@@ -23,8 +21,6 @@ class DataTablesController extends Controller
         }
         return view('book-list');
     }
-     
-
     /**
      * Store a newly created resource in storage.
      *
@@ -45,33 +41,34 @@ class DataTablesController extends Controller
                     ]);        
         return Response()->json($book);
     }
-     
-     
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\book  $book
-     * @return \Illuminate\Http\Response
-     */
+   
     public function edit(Request $request)
     {   
         $where = array('id' => $request->id);
         $book  = Book::where($where)->first();
-     
+
         return Response()->json($book);
     }
-     
-     
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\book  $book
-     * @return \Illuminate\Http\Response
-     */
+   
     public function destroy(Request $request)
     {
         $book = Book::where('id',$request->id)->delete();
-     
         return Response()->json($book);
     }
+    //search
+    public function bookIndex()
+    {
+        return view('book-list');
+    }
+    public function showBooks(Request $request)
+   {
+      $books = Book::all();
+      if($request->keyword != ''){
+      $books = Book::where('name','LIKE','%'.$request->keyword.'%')->get();
+      }
+      return response()->json([
+         'books' => $books
+      ]);
+    }
+
 }

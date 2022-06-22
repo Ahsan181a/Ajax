@@ -8,14 +8,15 @@
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   <link  href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.min.css" rel="stylesheet">
   <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.min.js"></script>
-  
 </head>
 <body>
 <div class="container mt-4">
   <div class="col-md-12 mt-1 mb-2"><button type="button" id="addNewBook" class="btn btn-success">Add</button></div>
   <div class="card">
     <div class="card-header text-center font-weight-bold">
-      <h2> DataTable</h2>
+    <div class="float-left">
+      <input type="text" class="form-control"   placeholder="Search book" id="search">
+    </div>
     </div>
     <div class="card-body">
     <table class="table table-bordered" id="datatable-ajax-crud">
@@ -72,7 +73,6 @@
       </div>
     </div>
 <!-- end bootstrap model -->
-
 <script type="text/javascript">
  $(document).ready( function () {
     $.ajaxSetup({
@@ -80,7 +80,7 @@
         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
     });
-    $('#datatable-ajax-crud').DataTable({
+    var dt_example = $('#datatable-ajax-crud').DataTable({
            processing: true,
            serverSide: true,
            ajax: "{{ url('ajax-datatable-crud') }}",
@@ -93,6 +93,9 @@
                     {data: 'action', name: 'action', orderable: true},
                  ],
           order: [[0, 'desc']]
+    });
+    $('#search').on('keyup', function(){
+      dt_example.search( $(this).val() ).draw();
     });
     $('#addNewBook').click(function () {
        $('#addEditBookForm').trigger("reset");
@@ -118,7 +121,6 @@
         });
     });
     $('body').on('click', '.delete', function () {
-
        if (confirm("Delete Record?") == true) {
         var id = $(this).data('id');
         // ajax
@@ -128,7 +130,6 @@
             data: { id: id },
             dataType: 'json',
             success: function(res){
-
               var oTable = $('#datatable-ajax-crud').dataTable();
               oTable.fnDraw(false);
            }
@@ -164,6 +165,41 @@
 
     });
 });
+</script>
+<script>       
+
+search();
+function search(){
+     var keyword = $('#search').val();
+     $.post('{{ route("book.search") }}',
+      {
+         _token: $('meta[name="csrf-token"]').attr('content'),
+         keyword:keyword
+       },
+       function(data){
+        table_post_row(data);
+          console.log(data);
+       });
+}
+function table_post_row(res){
+let htmlView = '';
+if(res.books.length <= 0){
+    htmlView+= `
+       <tr>
+          <td colspan="4">No data.</td>
+      </tr>`;
+}
+for(let i = 0; i < res.books.length; i++){
+    htmlView += `
+        <tr>
+           <td>`+ (i+1) +`</td>
+              <td>`+res.books[i].code+`</td>
+              <td>`+res.books[i].author+`</td>
+              <td>`+res.books[i].created_at+`</td>
+        </tr>`;
+}
+     $('tbody').html(htmlView);
+}
 </script>
 </div>  
 </body>
